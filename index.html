@@ -1,19 +1,41 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="main.css">
+  <title>Document</title>
 </head>
+
 <body>
-    
-<script src="https://unpkg.com/@strudel/web@1.0.3"></script>
-<button id="play">play</button>
-<button id="stop">stop</button>
-<script>
-  initStrudel();
-  document.getElementById('play').addEventListener('click', () => note('<c a f e>(3,8)').jux(rev).play());
-  document.getElementById('stop').addEventListener('click', () => hush());
-</script>
+  <button id="play">play</button>
+  <button id="stop">stop</button>
+  <div id="container"></div>
+  <script src="https://unpkg.com/@strudel/web@latest"></script>
+  <script>
+    initStrudel({
+      prebake: () => loadSamples()
+    });
+    async function loadSamples() {
+  const ds = "https://raw.githubusercontent.com/felixroos/dough-samples/main/";
+  return Promise.all([
+    samples(`${ds}/tidal-drum-machines.json`),
+    // samples(`${ds}/piano.json`),
+    // samples(`${ds}/Dirt-Samples.json`),
+    // samples(`${ds}/EmuSP12.json`),
+    // samples(`${ds}/vcsl.json`),
+    // samples(`${ds}/mridangam.json`),
+  ]);
+}
+  </script>
+  <script src="main.js"></script>
+  <script>
+    const stepSequencer = new StepSequencer();
+    stepSequencer.init();
+    document.getElementById('play').addEventListener('click', () => stepSequencer.play());
+    document.getElementById('stop').addEventListener('click', () => stepSequencer.stop());
+  </script>
 </body>
+
 </html>
