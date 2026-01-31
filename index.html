@@ -5,13 +5,41 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="main.css">
-  <title>Document</title>
+  <title>Step Sequencer</title>
 </head>
 
 <body>
-  <button id="play">play</button>
-  <button id="stop">stop</button>
-  <div id="container"></div>
+  <div class="controls">
+    <button id="toggle-settings" class="toggle-settings-btn" aria-label="Toggle settings">
+      <span class="toggle-icon">▼</span>
+    </button>
+    <div class="controls-row controls-row-top">
+      <div class="button-group">
+        <button id="play">play</button>
+        <button id="stop">stop</button>
+      </div>
+      <div class="cpm-control">
+        <label for="cpm-slider">BPM: <span id="cpm-value">60</span></label>
+        <input type="range" id="cpm-slider" min="10" max="300" value="60" step="1">
+      </div>
+    </div>
+    <div class="controls-row controls-row-bottom" id="settings-row" style="display: none;">
+      <div class="bank-control">
+        <label for="bank-select">Samples Bank:</label>
+        <select id="bank-select" class="bank-select"></select>
+      </div>
+      <div class="time-signature-control">
+        <label for="time-signature-select">Time Signature:</label>
+        <select id="time-signature-select" class="time-signature-select">
+          <option value="3">3/4</option>
+          <option value="4" selected>4/4</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <div id="container">
+    <div id="add-instrument-container"></div>
+  </div>
   <script src="https://unpkg.com/@strudel/web@latest"></script>
   <script>
     initStrudel({
@@ -33,8 +61,60 @@
   <script>
     const stepSequencer = new StepSequencer();
     stepSequencer.init();
+    
+    // Load banks and setup selector
+    stepSequencer.loadBanks().then(() => {
+      // Setup bank selector change handler after banks are loaded
+      const bankSelect = document.getElementById('bank-select');
+      if (bankSelect) {
+        bankSelect.addEventListener('change', (e) => {
+          stepSequencer.updateBank(e.target.value);
+        });
+      }
+    });
+    
     document.getElementById('play').addEventListener('click', () => stepSequencer.play());
     document.getElementById('stop').addEventListener('click', () => stepSequencer.stop());
+    
+    // CPM slider
+    const cpmSlider = document.getElementById('cpm-slider');
+    const cpmValue = document.getElementById('cpm-value');
+    
+    cpmSlider.addEventListener('input', (e) => {
+      const value = parseInt(e.target.value);
+      cpmValue.textContent = value;
+      stepSequencer.updateCpm(value);
+    });
+    
+    // Time signature selector
+    const timeSignatureSelect = document.getElementById('time-signature-select');
+    if (timeSignatureSelect) {
+      timeSignatureSelect.addEventListener('change', (e) => {
+        stepSequencer.updateMeasure(e.target.value);
+      });
+    }
+    
+    // Toggle settings button
+    const toggleSettingsBtn = document.getElementById('toggle-settings');
+    const settingsRow = document.getElementById('settings-row');
+    const controlsRowTop = document.querySelector('.controls-row-top');
+    const controlsContainer = document.querySelector('.controls');
+    if (toggleSettingsBtn && settingsRow && controlsRowTop && controlsContainer) {
+      toggleSettingsBtn.addEventListener('click', () => {
+        const isVisible = settingsRow.style.display !== 'none' && settingsRow.style.display !== '';
+        if (isVisible) {
+          settingsRow.style.display = 'none';
+          toggleSettingsBtn.classList.remove('active');
+          controlsRowTop.classList.remove('has-settings');
+          controlsContainer.classList.remove('has-expanded-settings');
+        } else {
+          settingsRow.style.display = 'flex';
+          toggleSettingsBtn.classList.add('active');
+          controlsRowTop.classList.add('has-settings');
+          controlsContainer.classList.add('has-expanded-settings');
+        }
+      });
+    }
   </script>
 </body>
 
