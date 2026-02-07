@@ -25,6 +25,8 @@ class StepSequencer {
         this.highlightInterval = null;
         this.isPlaying = false;
         this.patternStack = null;
+        // Track subdivisions per instrument and step: {instrument: {stepIndex: subdivision}}
+        this.subdivisions = {};
     }
     
     async loadBanks() {
@@ -172,6 +174,11 @@ class StepSequencer {
         instrumentRow.classList.add('instrument-row', instrument);
         instrumentRow.dataset.instrument = instrument;
         
+        // Initialize subdivisions for this instrument if not exists
+        if (!this.subdivisions[instrument]) {
+            this.subdivisions[instrument] = {};
+        }
+        
         // Instrument label column with remove button
         const labelContainer = document.createElement('div');
         labelContainer.classList.add('instrument-label-container');
@@ -196,11 +203,26 @@ class StepSequencer {
         for (let i = 0; i < this.stepsPerCycle; i++) {
             const step = document.createElement('div');
             step.classList.add('step', `step-${i}`);
+            step.dataset.instrument = instrument;
+            step.dataset.stepIndex = i;
             // Add beat marker class for visual grouping (every 4th step)
             if (i % this.stepsPerBeat === 0) {
                 step.classList.add('beat-marker');
             }
-            step.addEventListener('click', () => this.toggleStep(instrument, i));
+            // Initialize subdivision if not set (default is 1, meaning no subdivision)
+            if (!this.subdivisions[instrument][i]) {
+                this.subdivisions[instrument][i] = 1;
+            }
+            this.updateStepSubdivisionVisual(step, this.subdivisions[instrument][i]);
+            step.addEventListener('click', (e) => {
+                if (e.button === 0) { // Left click
+                    this.toggleStep(instrument, i);
+                }
+            });
+            step.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                this.showSubdivisionMenu(e, instrument, i);
+            });
             stepContainer.appendChild(step);
         }
         
@@ -215,11 +237,17 @@ class StepSequencer {
         // Remove from instruments array
         this.instruments = this.instruments.filter(inst => inst !== instrument);
         
+        // Remove subdivisions data
+        delete this.subdivisions[instrument];
+        
         // Remove the DOM element
         const instrumentRow = this.container.querySelector(`div.instrument-row.${instrument}`);
         if (instrumentRow) {
             instrumentRow.remove();
         }
+        
+        // Close any open subdivision menu
+        this.closeSubdivisionMenu();
         
         // If playing, restart with updated instruments
         if (this.isPlaying) {
@@ -311,19 +339,149 @@ class StepSequencer {
         const stepElement = this.container.querySelector(`div.instrument-row.${instrument} div.step.step-${step}`);
         stepElement.classList.toggle('active');
     }
+    
+    showSubdivisionMenu(event, instrument, stepIndex) {
+        // Close any existing menu
+        this.closeSubdivisionMenu();
+        
+        const menu = document.createElement('div');
+        menu.classList.add('subdivision-menu');
+        menu.dataset.instrument = instrument;
+        menu.dataset.stepIndex = stepIndex;
+        
+        const currentSubdivision = this.subdivisions[instrument][stepIndex] || 1;
+        
+        // Create "Subdivide" menu item with submenu
+        const subdivideItem = document.createElement('div');
+        subdivideItem.classList.add('subdivision-menu-item', 'has-submenu');
+        subdivideItem.textContent = 'Subdivide';
+        
+        // Create submenu
+        const submenu = document.createElement('div');
+        submenu.classList.add('subdivision-submenu');
+        
+        const options = [2, 3, 4];
+        options.forEach(subdiv => {
+            const item = document.createElement('div');
+            item.classList.add('subdivision-menu-item', 'submenu-item');
+            if (subdiv === currentSubdivision) {
+                item.classList.add('active');
+            }
+            item.textContent = `${subdiv} subdivisions`;
+            item.addEventListener('click', (e) => {
+                e.stopPropagation();
+                this.setSubdivision(instrument, stepIndex, subdiv);
+                this.closeSubdivisionMenu();
+            });
+            submenu.appendChild(item);
+        });
+        
+        // Show submenu on hover
+        subdivideItem.addEventListener('mouseenter', () => {
+            submenu.style.display = 'block';
+        });
+        
+        // Keep submenu visible when hovering over it
+        submenu.addEventListener('mouseenter', () => {
+            submenu.style.display = 'block';
+        });
+        
+        // Hide submenu when mouse leaves
+        const hideSubmenu = () => {
+            submenu.style.display = 'none';
+        };
+        subdivideItem.addEventListener('mouseleave', (e) => {
+            // Only hide if not moving to submenu
+            if (!submenu.contains(e.relatedTarget)) {
+                hideSubmenu();
+            }
+        });
+        submenu.addEventListener('mouseleave', (e) => {
+            // Only hide if not moving back to parent item
+            if (!subdivideItem.contains(e.relatedTarget)) {
+                hideSubmenu();
+            }
+        });
+        
+        menu.appendChild(subdivideItem);
+        menu.appendChild(submenu);
+        
+        document.body.appendChild(menu);
+        
+        // Position menu near the click
+        const rect = event.target.getBoundingClientRect();
+        menu.style.left = `${rect.left + rect.width / 2}px`;
+        menu.style.top = `${rect.bottom + 5}px`;
+        
+        // Close menu when clicking outside
+        setTimeout(() => {
+            document.addEventListener('click', this.closeSubdivisionMenu.bind(this), { once: true });
+        }, 0);
+    }
+    
+    closeSubdivisionMenu() {
+        const menu = document.querySelector('.subdivision-menu');
+        if (menu) {
+            menu.remove();
+        }
+    }
+    
+    setSubdivision(instrument, stepIndex, subdivision) {
+        if (!this.subdivisions[instrument]) {
+            this.subdivisions[instrument] = {};
+        }
+        this.subdivisions[instrument][stepIndex] = subdivision;
+        
+        const stepElement = this.container.querySelector(
+            `div.instrument-row.${instrument} div.step.step-${stepIndex}`
+        );
+        if (stepElement) {
+            this.updateStepSubdivisionVisual(stepElement, subdivision);
+        }
+        
+        // If playing, restart with updated subdivisions
+        if (this.isPlaying) {
+            this.play();
+        }
+    }
+    
+    updateStepSubdivisionVisual(stepElement, subdivision) {
+        // Remove existing subdivision classes
+        stepElement.classList.remove('subdivision-2', 'subdivision-3', 'subdivision-4');
+        
+        // Remove existing divider elements
+        const existingDividers = stepElement.querySelectorAll('.subdiv-line');
+        existingDividers.forEach(divider => divider.remove());
+        
+        // Add appropriate class
+        if (subdivision > 1) {
+            stepElement.classList.add(`subdivision-${subdivision}`);
+            
+            // For 4 subdivisions, we need to add extra divider elements (since ::before and ::after are used for 3)
+            if (subdivision === 4) {
+                const positions = [25, 50, 75];
+                positions.forEach(pos => {
+                    const divider = document.createElement('div');
+                    divider.classList.add('subdiv-line');
+                    divider.style.left = `${pos}%`;
+                    stepElement.appendChild(divider);
+                });
+            }
+        }
+        
+        // Update data attribute
+        stepElement.dataset.subdivision = subdivision;
+    }
 
     play() {
         hush();
         
         const patterns = this.instruments.map(instrument => {
             const steps = this.container.querySelectorAll(`div.instrument-row.${instrument} div.step`);
-            const activeBeats = Array.from(steps)
-                .map((step, i) => step.classList.contains('active') ? i : null)
-                .filter(beat => beat !== null)
-                .join(',');
-            console.log(activeBeats);
+            const beatPattern = this.buildBeatPattern(instrument, steps);
+            console.log(`${instrument} pattern:`, beatPattern);
             console.log(this.stepsPerCycle);
-            return s(instrument).beat(activeBeats || '-', this.stepsPerCycle).bank(this.bank).cpm(this.bpm);
+            return s(instrument).beat(beatPattern || '-', this.stepsPerCycle).bank(this.bank).cpm(this.bpm);
         });
 
         this.patternStack = stack(...patterns);
@@ -331,6 +489,32 @@ class StepSequencer {
         
         this.isPlaying = true;
         this.startHighlight();
+    }
+    
+    buildBeatPattern(instrument, steps) {
+        const patternParts = [];
+        
+        Array.from(steps).forEach((step, i) => {
+            const isActive = step.classList.contains('active');
+            const subdivision = this.subdivisions[instrument]?.[i] || 1;
+            
+            if (isActive) {
+                if (subdivision === 1) {
+                    // No subdivision, just the step number
+                    patternParts.push(i);
+                } else {
+                    // Create subdivision pattern with fractional beats
+                    // For subdivision N, divide the step into N parts
+                    const subdivBeats = Array.from({ length: subdivision }, (_, idx) => {
+                        return i + (idx / subdivision);
+                    });
+                    // Add fractional beats directly without brackets
+                    subdivBeats.forEach(beat => patternParts.push(beat));
+                }
+            }
+        });
+        
+        return patternParts.length > 0 ? patternParts.join(',') : null;
     }
     
     updateCpm(newCpm) {
@@ -353,14 +537,21 @@ class StepSequencer {
     }
     
     regenerateInstrumentRows() {
-        // Store current active steps
+        // Store current active steps and subdivisions
         const activeSteps = {};
+        const storedSubdivisions = {};
         this.instruments.forEach(instrument => {
             const steps = this.container.querySelectorAll(`div.instrument-row.${instrument} div.step`);
             activeSteps[instrument] = [];
+            storedSubdivisions[instrument] = {};
             steps.forEach((step, i) => {
                 if (step.classList.contains('active')) {
                     activeSteps[instrument].push(i);
+                }
+                // Store subdivision
+                const subdivision = this.subdivisions[instrument]?.[i] || 1;
+                if (i < this.stepsPerCycle) {
+                    storedSubdivisions[instrument][i] = subdivision;
                 }
             });
         });
@@ -369,8 +560,17 @@ class StepSequencer {
         const instrumentRows = this.container.querySelectorAll('.instrument-row');
         instrumentRows.forEach(row => row.remove());
         
+        // Close any open subdivision menu
+        this.closeSubdivisionMenu();
+        
         // Recreate all instrument rows
         this.instruments.forEach(instrument => {
+            // Restore subdivisions before creating row
+            if (!this.subdivisions[instrument]) {
+                this.subdivisions[instrument] = {};
+            }
+            Object.assign(this.subdivisions[instrument], storedSubdivisions[instrument]);
+            
             this.addInstrumentRow(instrument);
             
             // Restore active steps (only if they're within the new step count)

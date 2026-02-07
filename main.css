@@ -21,7 +21,6 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 1rem;
-  width: 100%;
 }
 
 .instrument-row {
@@ -118,6 +117,127 @@ div.step.current {
 div.step.active.current {
   background-color: #ffba06;
   box-shadow: inset 0 0 0 3px white, 0 0 20px rgba(255, 186, 6, 0.8);
+}
+
+/* Subdivision visual dividers */
+div.step.subdivision-2::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.6);
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+div.step.subdivision-3::after {
+  content: '';
+  position: absolute;
+  left: 33.333%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+div.step.subdivision-3::before {
+  content: '';
+  position: absolute;
+  left: 66.666%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+div.step .subdiv-line {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: rgba(255, 255, 255, 0.6);
+  pointer-events: none;
+}
+
+/* More contrasting lines when step is active */
+div.step.active.subdivision-2::after,
+div.step.active.subdivision-3::after,
+div.step.active.subdivision-3::before,
+div.step.active .subdiv-line {
+  background-color: rgba(255, 255, 255, 0.9);
+  width: 1.5px;
+}
+
+/* Subdivision menu */
+.subdivision-menu {
+  position: fixed;
+  background-color: #2a2d3e;
+  border: 2px solid #40476d;
+  border-radius: 6px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  z-index: 1000;
+  min-width: 180px;
+  overflow: visible;
+  transform: translateX(-50%);
+}
+
+.subdivision-menu-item {
+  padding: 0.75rem 1rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border-bottom: 1px solid #40476d;
+  font-size: 0.85rem;
+  position: relative;
+}
+
+.subdivision-menu-item:last-child {
+  border-bottom: none;
+}
+
+.subdivision-menu-item:hover {
+  background-color: #40476d;
+  color: #ffba06;
+}
+
+.subdivision-menu-item.active {
+  background-color: #40476d;
+  color: #ffba06;
+  font-weight: 600;
+}
+
+.subdivision-menu-item.has-submenu::after {
+  content: '▶';
+  position: absolute;
+  right: 0.75rem;
+  font-size: 0.7rem;
+  color: #ffba06;
+}
+
+.subdivision-submenu {
+  position: absolute;
+  left: 100%;
+  top: 0;
+  background-color: #2a2d3e;
+  border: 2px solid #40476d;
+  border-radius: 6px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+  min-width: 180px;
+  margin-left: 5px;
+  display: none;
+  z-index: 1001;
+}
+
+.submenu-item {
+  border-bottom: 1px solid #40476d;
+}
+
+.submenu-item:last-child {
+  border-bottom: none;
 }
 
 /* Extra margin after every 4th step (beat markers) */
