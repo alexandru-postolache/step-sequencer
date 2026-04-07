@@ -313,17 +313,18 @@ class StepSequencer {
 
     play() {
         hush();
+        const cpm = (2 * this.bpm) / this.measure;
         
         const patterns = this.instruments.map(instrument => {
             const steps = this.container.querySelectorAll(`div.instrument-row.${instrument} div.step`);
-            const activeBeats = Array.from(steps)
-                .map((step, i) => step.classList.contains('active') ? i : null)
-                .filter(beat => beat !== null)
-                .join(',');
-            console.log(activeBeats);
-            console.log(this.stepsPerCycle);
-            // Strudel runs ~2× slower than cpm(bpm/measure) suggests; 2× here matches displayed BPM.
-            return s(instrument).beat(activeBeats || '-', this.stepsPerCycle).bank(this.bank).cpm((2 * this.bpm) / this.measure);
+            const sequence = Array.from(steps)
+                .map((step) => (step.classList.contains('active') ? instrument : '~'))
+                .join(' ');
+            // Silent primer: ensures the sample is requested/loaded even when
+            // step 0 is a rest in the user pattern.
+            const primer = s(instrument).bank(this.bank).gain(0).beat('0', 1).cpm(cpm);
+            const musical = s(sequence).bank(this.bank).cpm(cpm);
+            return stack(primer, musical);
         });
 
         this.patternStack = stack(...patterns);
