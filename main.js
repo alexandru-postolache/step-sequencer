@@ -147,14 +147,10 @@ class StepSequencer {
         }
     }
 
+    /** Ms per step; one pattern cycle = one bar at the slider BPM (matches Strudel + exports). */
     getStepDurationMs() {
-        const cycleDurationMs = this.measure * (60 / this.bpm) * 1000;
-        let divisor = 2;
-        if (this.measure === 3) {
-            divisor = 1.5;
-        }
-        
-        return (cycleDurationMs / this.stepsPerCycle) / divisor;
+        const cycleDurationMs = (this.measure * 60 / this.bpm) * 1000;
+        return cycleDurationMs / this.stepsPerCycle;
     }
 
     init() {
@@ -310,6 +306,9 @@ class StepSequencer {
     toggleStep(instrument, step) {
         const stepElement = this.container.querySelector(`div.instrument-row.${instrument} div.step.step-${step}`);
         stepElement.classList.toggle('active');
+        if (this.isPlaying) {
+            this.play();
+        }
     }
 
     play() {
@@ -323,7 +322,8 @@ class StepSequencer {
                 .join(',');
             console.log(activeBeats);
             console.log(this.stepsPerCycle);
-            return s(instrument).beat(activeBeats || '-', this.stepsPerCycle).bank(this.bank).cpm(this.bpm);
+            // Strudel runs ~2× slower than cpm(bpm/measure) suggests; 2× here matches displayed BPM.
+            return s(instrument).beat(activeBeats || '-', this.stepsPerCycle).bank(this.bank).cpm((2 * this.bpm) / this.measure);
         });
 
         this.patternStack = stack(...patterns);
@@ -440,5 +440,76 @@ class StepSequencer {
         this.isPlaying = false;
         this.patternStack = null;
         this.stopHighlight();
+    }
+
+    collectActivePattern() {
+        const activeSteps = {};
+        let hasAny = false;
+        for (const instrument of this.instruments) {
+            activeSteps[instrument] = [];
+            const steps = this.container.querySelectorAll(
+                `div.instrument-row.${instrument} div.step`
+            );
+            steps.forEach((stepEl, i) => {
+                if (stepEl.classList.contains('active')) {
+                    activeSteps[instrument].push(i);
+                    hasAny = true;
+                }
+            });
+        }
+        return { activeSteps, hasAny };
+    }
+
+    exportMidi() {
+        const { activeSteps, hasAny } = this.collectActivePattern();
+        if (!hasAny) {
+            alert('Turn on at least one step to export.');
+            return;
+        }
+        const blob = SequencerExport.buildMidiBlob({
+            bpm: this.bpm,
+            measure: this.measure,
+            stepsPerCycle: this.stepsPerCycle,
+            instruments: this.instruments,
+            activeSteps,
+            loopCount: 4,
+        });
+        SequencerExport.downloadBlob(blob, 'strudel-step-pattern.mid');
+    }
+
+    async exportWav() {
+        const { activeSteps, hasAny } = this.collectActivePattern();
+        if (!hasAny) {
+            alert('Turn on at least one step to export.');
+            return;
+        }
+        const btn = document.getElementById('export-wav');
+        const prev = btn ? btn.textContent : '';
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = '…';
+        }
+        try {
+            const blob = await SequencerExport.renderWavBlob({
+                bank: this.bank,
+                measure: this.measure,
+                bpm: this.bpm,
+                stepsPerCycle: this.stepsPerCycle,
+                instruments: this.instruments,
+                activeSteps,
+                loopCount: 4,
+                sampleRate: 44100,
+                perVoiceGain: 0.22,
+            });
+            SequencerExport.downloadBlob(blob, 'strudel-step-pattern.wav');
+        } catch (e) {
+            console.error(e);
+            alert('Failed to render WAV: ' + (e.message || String(e)));
+        } finally {
+            if (btn) {
+                btn.disabled = false;
+                btn.textContent = prev || 'WAV';
+            }
+        }
     }
 }

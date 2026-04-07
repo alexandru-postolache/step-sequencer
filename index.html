@@ -5,10 +5,18 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link rel="stylesheet" href="main.css">
-  <title>Step Sequencer</title>
+  <title>Strudel Step Sequencer</title>
 </head>
 
 <body>
+  <header class="page-header">
+    <a class="brand-logo-link" href="https://alexcodesart.com" target="_blank" rel="noopener noreferrer" aria-label="Alex Codes Art">
+      <img src="assets/logo-horizontal.png" alt="Alex Codes Art" width="1024" height="162" class="brand-logo brand-logo-top" decoding="async">
+    </a>
+    <p class="page-eyebrow">Pattern sequencer</p>
+    <h1 class="page-title"><span class="page-title-brand">Strudel</span> Step Sequencer</h1>
+  </header>
+  <main class="page-main">
   <div class="controls">
     <button id="toggle-settings" class="toggle-settings-btn" aria-label="Toggle settings">
       <span class="toggle-icon">▼</span>
@@ -17,6 +25,10 @@
       <div class="button-group">
         <button id="play">play</button>
         <button id="stop">stop</button>
+      </div>
+      <div class="export-group" title="Exports 4 pattern loops">
+        <button type="button" id="export-wav" class="export-btn">WAV</button>
+        <button type="button" id="export-midi" class="export-btn">MIDI</button>
       </div>
       <div class="cpm-control">
         <label for="cpm-slider">BPM: <span id="cpm-value">60</span></label>
@@ -40,6 +52,16 @@
   <div id="container">
     <div id="add-instrument-container"></div>
   </div>
+  <section class="donate-section">
+    <p class="donate-copy">If you like this and would like to support me building more creative coding tools, please consider a donation.</p>
+    <a href="https://alexcodesart.com/#/portal/support" target="_blank" rel="noopener noreferrer" class="donate-btn">Support This Project</a>
+  </section>
+  <footer class="page-footer">
+    <a class="brand-logo-link" href="https://alexcodesart.com" target="_blank" rel="noopener noreferrer" aria-label="Alex Codes Art">
+      <img src="assets/logo-horizontal.png" alt="Alex Codes Art" width="1024" height="162" class="brand-logo brand-logo-bottom" decoding="async">
+    </a>
+  </footer>
+  </main>
   <script src="https://unpkg.com/@strudel/web@latest"></script>
   <script>
     initStrudel({
@@ -57,6 +79,7 @@
   ]);
 }
   </script>
+  <script src="export.js"></script>
   <script src="main.js"></script>
   <script>
     const stepSequencer = new StepSequencer();
@@ -75,6 +98,8 @@
     
     document.getElementById('play').addEventListener('click', () => stepSequencer.play());
     document.getElementById('stop').addEventListener('click', () => stepSequencer.stop());
+    document.getElementById('export-wav').addEventListener('click', () => stepSequencer.exportWav());
+    document.getElementById('export-midi').addEventListener('click', () => stepSequencer.exportMidi());
     
     // CPM slider
     const cpmSlider = document.getElementById('cpm-slider');

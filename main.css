@@ -11,9 +11,135 @@ body {
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 2rem;
+  justify-content: flex-start;
+  padding: 1.25rem 0 1.75rem;
   color: white;
+}
+
+.page-header {
+  width: 100%;
+  max-width: 1200px;
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 2rem;
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.brand-logo-link {
+  display: inline-flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.brand-logo {
+  display: block;
+  width: min(300px, 72vw);
+  height: auto;
+  opacity: 0.9;
+  mix-blend-mode: screen;
+}
+
+.brand-logo-top {
+  margin: 0 auto 0.8rem;
+}
+
+.page-eyebrow {
+  font-size: 0.65rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: rgba(200, 204, 220, 0.55);
+  margin-bottom: 0.35rem;
+}
+
+.page-title {
+  font-size: clamp(1.05rem, 2.8vw, 1.45rem);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #e8eaf2;
+  line-height: 1.25;
+}
+
+.page-title-brand {
+  color: #ffba06;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.page-main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+  padding: 0 2rem;
+  box-sizing: border-box;
+}
+
+.page-footer {
+  margin-top: 1.4rem;
+  padding-top: 1.25rem;
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-top: 1px solid rgba(64, 71, 109, 0.45);
+  box-sizing: border-box;
+}
+
+.brand-logo-bottom {
+  width: min(260px, 74vw);
+}
+
+@supports not (mix-blend-mode: screen) {
+  .brand-logo {
+    mix-blend-mode: normal;
+    opacity: 0.72;
+  }
+}
+
+.donate-section {
+  width: 100%;
+  max-width: 1200px;
+  margin-top: 1.75rem;
+  padding-top: 1.1rem;
+  border-top: 1px solid rgba(64, 71, 109, 0.45);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.donate-copy {
+  color: rgba(232, 234, 242, 0.72);
+  font-size: 0.88rem;
+  text-align: center;
+  max-width: 640px;
+}
+
+.donate-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 200px;
+  height: 40px;
+  padding: 0 1rem;
+  border: 1px solid #ffba06;
+  border-radius: 6px;
+  background: transparent;
+  color: #ffba06;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-decoration: none;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+}
+
+.donate-btn:hover {
+  background: #ffba06;
+  color: #1a1d2e;
+  border-color: #ffba06;
 }
 
 #container {
@@ -21,7 +147,6 @@ body {
   flex-direction: column;
   align-items: stretch;
   gap: 1rem;
-  width: 100%;
 }
 
 .instrument-row {
@@ -150,6 +275,38 @@ div.step.active.current {
   flex-shrink: 0;
 }
 
+.export-group {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.export-btn {
+  padding: 0.5rem 0.85rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  border: 2px solid #505a7a;
+  border-radius: 6px;
+  cursor: pointer;
+  background-color: rgba(64, 71, 109, 0.35);
+  color: #c8cad8;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover:not(:disabled) {
+  border-color: #ffba06;
+  color: #ffba06;
+  background-color: rgba(64, 71, 109, 0.55);
+}
+
+.export-btn:disabled {
+  opacity: 0.45;
+  cursor: wait;
+}
+
 /* Toggle settings button */
 .toggle-settings-btn {
   position: absolute;
@@ -265,7 +422,7 @@ div.step.active.current {
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
-  margin-bottom: 2rem;
+  margin-bottom: 1.25rem;
   padding: 1rem;
   padding-right: 3rem;
   background: linear-gradient(135deg, rgba(42, 45, 62, 0.8) 0%, rgba(26, 29, 46, 0.9) 100%);
