@@ -16,6 +16,24 @@ body {
   color: white;
 }
 
+.back-link {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  color: rgba(232, 234, 242, 0.75);
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.85rem;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+.back-link:hover {
+  color: #ffba06;
+}
+
 .page-header {
   width: 100%;
   max-width: 1200px;
