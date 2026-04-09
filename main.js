@@ -186,19 +186,21 @@ class StepSequencer {
         labelContainer.appendChild(instrumentLabel);
         labelContainer.appendChild(removeButton);
         
-        // Steps column
+        // Steps column – group every stepsPerBeat into a .beat-group
         const stepContainer = document.createElement('div');
         stepContainer.classList.add('step-container');
         
+        let beatGroup = null;
         for (let i = 0; i < this.stepsPerCycle; i++) {
+            if (i % this.stepsPerBeat === 0) {
+                beatGroup = document.createElement('div');
+                beatGroup.classList.add('beat-group');
+                stepContainer.appendChild(beatGroup);
+            }
             const step = document.createElement('div');
             step.classList.add('step', `step-${i}`);
-            // Add beat marker class for visual grouping (every 4th step)
-            if (i % this.stepsPerBeat === 0) {
-                step.classList.add('beat-marker');
-            }
             step.addEventListener('click', () => this.toggleStep(instrument, i));
-            stepContainer.appendChild(step);
+            beatGroup.appendChild(step);
         }
         
         instrumentRow.appendChild(labelContainer);
