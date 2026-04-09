@@ -25,6 +25,7 @@ class StepSequencer {
         this.highlightInterval = null;
         this.isPlaying = false;
         this.patternStack = null;
+        this.patternDirty = false;
     }
     
     async loadBanks() {
@@ -307,12 +308,13 @@ class StepSequencer {
         const stepElement = this.container.querySelector(`div.instrument-row.${instrument} div.step.step-${step}`);
         stepElement.classList.toggle('active');
         if (this.isPlaying) {
-            this.play();
+            this.patternDirty = true;
         }
     }
 
     play() {
         hush();
+        this.patternDirty = false;
         const cpm = (2 * this.bpm) / this.measure;
         
         const patterns = this.instruments.map(instrument => {
@@ -393,14 +395,41 @@ class StepSequencer {
     startHighlight() {
         this.stopHighlight();
         this.startTime = performance.now();
+        this.lastHighlightedStep = -1;
         const stepDuration = this.getStepDurationMs();
         const tick = () => {
             const elapsed = performance.now() - this.startTime;
             const currentStep = Math.floor(elapsed / stepDuration) % this.stepsPerCycle;
+
+            if (currentStep === 0 && this.lastHighlightedStep > 0 && this.patternDirty) {
+                this.patternDirty = false;
+                this.applyPatternUpdate();
+            }
+
+            this.lastHighlightedStep = currentStep;
             this.highlight(currentStep);
         };
         tick();
         this.highlightInterval = setInterval(tick, Math.min(stepDuration / 2, 50));
+    }
+
+    applyPatternUpdate() {
+        hush();
+        const cpm = (2 * this.bpm) / this.measure;
+
+        const patterns = this.instruments.map(instrument => {
+            const steps = this.container.querySelectorAll(`div.instrument-row.${instrument} div.step`);
+            const sequence = Array.from(steps)
+                .map((step) => (step.classList.contains('active') ? instrument : '~'))
+                .join(' ');
+            const primer = s(instrument).bank(this.bank).gain(0).beat('0', 1).cpm(cpm);
+            const musical = s(sequence).bank(this.bank).cpm(cpm);
+            return stack(primer, musical);
+        });
+
+        this.patternStack = stack(...patterns);
+        this.patternStack.play();
+        this.startTime = performance.now();
     }
 
     stopHighlight() {
