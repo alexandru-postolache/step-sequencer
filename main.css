@@ -219,11 +219,16 @@ body {
 
 .step-container {
   display: flex;
-  justify-content: flex-start;
-  align-items: center;
+  flex-wrap: wrap;
   gap: 0.5rem;
   flex: 1;
-  flex-wrap: wrap;
+  min-width: 0;
+}
+
+.beat-group {
+  display: flex;
+  gap: 0.35rem;
+  flex-shrink: 0;
 }
 
 div.step {
@@ -263,26 +268,20 @@ div.step.active.current {
   box-shadow: inset 0 0 0 3px white, 0 0 20px rgba(255, 186, 6, 0.8);
 }
 
-/* Extra margin after every 4th step (beat markers) */
-.step-container div.step.beat-marker {
-  margin-left: 0.75rem;
+/* Visual separator between beat groups */
+.beat-group + .beat-group {
+  position: relative;
 }
 
-.step-container div.step.beat-marker:first-child {
-  margin-left: 0;
-}
-
-/* Visual indicator for beat markers */
-.step-container div.step.beat-marker::before {
+.beat-group + .beat-group::before {
   content: '';
   position: absolute;
-  left: -0.5rem;
-  top: 50%;
-  transform: translateY(-50%);
+  left: -0.35rem;
+  top: 15%;
+  height: 70%;
   width: 2px;
-  height: 60%;
   background-color: #40476d;
-  opacity: 0.5;
+  opacity: 0.45;
 }
 
 /* Button group */
@@ -731,10 +730,21 @@ div.step.active.current {
   color: #888;
 }
 
-/* ======================================
-   Responsive – Tablets (≤ 900px)
-   ====================================== */
-@media (max-width: 900px) {
+/* ======================================================================
+   Responsive – Progressive grid layout
+   
+   Strategy:  keep all 4 beat-groups on one row as long as possible by
+   shrinking cells first, then break to 2×2, then 4×1.
+   
+   Desktop  (>960px)  :  1 row  ×  4 beat-groups   –  50 px cells
+   Tablet-L (≤960px)  :  1 row  ×  4 beat-groups   –  40 px cells
+   Tablet-M (≤780px)  :  1 row  ×  4 beat-groups   –  32 px cells
+   Tablet-S (≤640px)  :  2 rows ×  2 beat-groups   –  36 px cells
+   Phone    (≤420px)  :  4 rows ×  1 beat-group    –  32 px cells
+   ====================================================================== */
+
+/* ── ≤ 960px – shrink cells, keep 4-across ── */
+@media (max-width: 960px) {
   body {
     padding: 1rem 0 1.25rem;
   }
@@ -759,6 +769,14 @@ div.step.active.current {
     height: 40px;
   }
 
+  .beat-group {
+    gap: 0.25rem;
+  }
+
+  .step-container {
+    gap: 0.4rem;
+  }
+
   .instrument-label-container {
     min-width: 130px;
     gap: 0.5rem;
@@ -771,14 +789,6 @@ div.step.active.current {
 
   .instrument-row {
     gap: 0.75rem;
-  }
-
-  .step-container {
-    gap: 0.35rem;
-  }
-
-  .step-container div.step.beat-marker {
-    margin-left: 0.5rem;
   }
 
   .controls {
@@ -802,14 +812,83 @@ div.step.active.current {
   }
 }
 
-/* ======================================
-   Responsive – Small tablets / Large phones (≤ 680px)
-   ====================================== */
-@media (max-width: 680px) {
+/* ── ≤ 780px – even smaller cells, still 4-across ── */
+@media (max-width: 780px) {
+  div.step {
+    width: 32px;
+    height: 32px;
+    border-width: 1.5px;
+    border-radius: 3px;
+  }
+
+  .beat-group {
+    gap: 0.2rem;
+  }
+
+  .step-container {
+    gap: 0.35rem;
+  }
+
+  .beat-group + .beat-group::before {
+    left: -0.25rem;
+    height: 60%;
+  }
+
+  .instrument-label-container {
+    min-width: 110px;
+    gap: 0.4rem;
+    padding-right: 0.35rem;
+  }
+
+  .instrument-label {
+    font-size: 0.8rem;
+  }
+
+  .instrument-row {
+    gap: 0.5rem;
+  }
+
+  .controls-row {
+    gap: 0.6rem;
+  }
+
+  .cpm-control {
+    min-width: 140px;
+  }
+}
+
+/* ── ≤ 640px – break to 2 rows × 2 beat-groups ── */
+@media (max-width: 640px) {
+  .step-container {
+    gap: 0.4rem 0.6rem;
+  }
+
+  .beat-group {
+    flex-basis: calc(50% - 0.3rem);
+    gap: 0.3rem;
+  }
+
+  div.step {
+    width: 36px;
+    height: 36px;
+    border-width: 2px;
+    border-radius: 4px;
+    flex: 1;
+  }
+
+  .beat-group + .beat-group::before {
+    left: -0.4rem;
+    height: 65%;
+  }
+
+  .beat-group:nth-child(2n+1)::before {
+    display: none;
+  }
+
   .instrument-row {
     flex-direction: column;
     align-items: flex-start;
-    gap: 0.4rem;
+    gap: 0.35rem;
   }
 
   .instrument-label-container {
@@ -817,19 +896,6 @@ div.step.active.current {
     width: 100%;
     justify-content: flex-start;
     padding-right: 0;
-  }
-
-  .step-container {
-    width: 100%;
-  }
-
-  div.step {
-    width: 36px;
-    height: 36px;
-  }
-
-  .step-container div.step.beat-marker {
-    margin-left: 0.4rem;
   }
 
   #container {
@@ -876,10 +942,8 @@ div.step.active.current {
   }
 }
 
-/* ======================================
-   Responsive – Phones (≤ 480px)
-   ====================================== */
-@media (max-width: 480px) {
+/* ── ≤ 420px – break to 4 rows × 1 beat-group ── */
+@media (max-width: 420px) {
   body {
     padding: 0.75rem 0 1rem;
   }
@@ -897,24 +961,25 @@ div.step.active.current {
     font-size: clamp(0.95rem, 4.5vw, 1.2rem);
   }
 
-  div.step {
-    width: 30px;
-    height: 30px;
-    border-width: 1.5px;
-    border-radius: 3px;
+  .step-container {
+    gap: 0.3rem;
   }
 
-  .step-container {
+  .beat-group {
+    flex-basis: 100%;
     gap: 0.25rem;
   }
 
-  .step-container div.step.beat-marker {
-    margin-left: 0.3rem;
+  div.step {
+    width: 32px;
+    height: 32px;
+    border-width: 1.5px;
+    border-radius: 3px;
+    flex: 1;
   }
 
-  .step-container div.step.beat-marker::before {
-    left: -0.25rem;
-    height: 50%;
+  .beat-group + .beat-group::before {
+    display: none;
   }
 
   .instrument-label {
